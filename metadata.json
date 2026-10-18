@@ -1,0 +1,6 @@
+{
+  "name": "PRO SOCCER ET",
+  "description": "Premium football prediction platform with advanced analytical modeling, secret admin approval system, and instant glowing predict workflow.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

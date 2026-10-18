@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-display: 'Outfit', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #05070a;
+    color: #f8fafc;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, .font-brand {
+    font-family: var(--font-display);
+  }
+}
+
+/* Glowing Gold Animations & Effects */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.45),
+                0 0 35px rgba(255, 215, 0, 0.25),
+                inset 0 0 12px rgba(255, 215, 0, 0.3);
+    border-color: #ffd700;
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(255, 215, 0, 0.8),
+                0 0 60px rgba(255, 215, 0, 0.45),
+                inset 0 0 20px rgba(255, 215, 0, 0.5);
+    border-color: #fff176;
+  }
+}
+
+@keyframes radarSweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.glowing-predict-button {
+  animation: pulseGlow 2.4s ease-in-out infinite;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glowing-predict-button:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 35px rgba(255, 215, 0, 0.9),
+              0 0 80px rgba(255, 215, 0, 0.6),
+              inset 0 0 25px rgba(255, 215, 0, 0.6);
+}
+
+.glowing-predict-button:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+/* Gold Gradient Text */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #FFF9A6 0%, #FFD700 45%, #D49B00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gold-bright {
+  background: linear-gradient(180deg, #FFFFFF 0%, #FFE57F 40%, #FFC107 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Premium Dark Surfaces */
+.bg-stadium-card {
+  background: linear-gradient(180deg, rgba(18, 22, 32, 0.85) 0%, rgba(10, 13, 20, 0.95) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.14);
+}
+
+.bg-stadium-card-hover {
+  transition: all 0.2s ease;
+}
+
+.bg-stadium-card-hover:hover {
+  border-color: rgba(255, 215, 0, 0.4);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 215, 0, 0.08);
+}
+
+/* Stadium Spotlight Backdrop */
+.stadium-lighting {
+  background: radial-gradient(circle at 50% -10%, rgba(255, 215, 0, 0.15) 0%, rgba(15, 23, 42, 0.4) 35%, transparent 70%);
+}
+
+.pitch-gradient {
+  background: radial-gradient(ellipse at 50% 120%, rgba(16, 185, 129, 0.18) 0%, rgba(6, 78, 59, 0.08) 40%, transparent 80%);
+}
