@@ -6,7 +6,26 @@ import {
   determineRiskLevel,
   formatOdds,
   generatePrediction,
+  calculateComboOdds,
+  WORLD_LEAGUES,
 } from './predictionEngine.ts';
+
+test('calculateComboOdds correctly multiplies decimal odds', () => {
+  const combo = calculateComboOdds([
+    { id: '1', category: '1x2', label: 'Home Win', odds: 1.80 },
+    { id: '2', category: 'over_under', label: 'Over 1.5 Goals', odds: 1.30 },
+  ]);
+  // 1.80 * 1.30 = 2.34
+  assert.equal(combo, 2.34);
+});
+
+test('WORLD_LEAGUES contains African and global leagues', () => {
+  const allLeagueNames = WORLD_LEAGUES.flatMap((c) => c.leagues.map((l) => l.name));
+  assert.ok(allLeagueNames.includes('Ethiopian Premier League (ET)'));
+  assert.ok(allLeagueNames.includes('UEFA Champions League'));
+  assert.ok(allLeagueNames.includes('Major League Soccer (MLS)'));
+  assert.ok(allLeagueNames.includes('Saudi Pro League'));
+});
 
 test('calculateImpliedProbability correctly derives percentage from decimal odds', () => {
   // 1 / 2.0 = 50%

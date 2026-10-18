@@ -12,13 +12,22 @@ export interface User {
   reviewedBy?: string;
 }
 
-export type MarketType = '1x2' | 'over_under' | 'win_loss';
+export type MarketType = '1x2' | 'over_under' | 'win_loss' | 'double_chance' | 'both_score' | 'all';
+
+export interface MarketSelectionItem {
+  id: string;
+  category: string;
+  label: string;
+  odds: number;
+}
 
 export interface PredictionInput {
   league: string;
   day: string; // 'Today' | 'Tomorrow' | 'Weekend' | specific date
   marketType: MarketType;
-  marketSelection: string; // e.g. 'Home (1)', 'Over 2.5 Goals', 'Home Win'
+  marketSelection: string; // e.g. 'Home Win (1)', 'Over 2.5 Goals'
+  selectedMarkets?: MarketSelectionItem[];
+  isCombo?: boolean;
   odds: number; // e.g. 1.85, strictly 1X decimal format
   homeTeam?: string;
   awayTeam?: string;
@@ -41,6 +50,9 @@ export interface PredictionResult {
   day: string;
   marketType: MarketType;
   marketSelection: string;
+  selectedMarkets?: MarketSelectionItem[];
+  isCombo?: boolean;
+  totalOdds?: number;
   odds: number;
   winProbability: number; // e.g. 78%
   expectedValue: number; // e.g. +14.2%
