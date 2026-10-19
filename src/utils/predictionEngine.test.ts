@@ -8,6 +8,7 @@ import {
   generatePrediction,
   calculateComboOdds,
   WORLD_LEAGUES,
+  deriveOutcomeVerdict,
 } from './predictionEngine.ts';
 
 test('calculateComboOdds correctly multiplies decimal odds', () => {
@@ -77,4 +78,16 @@ test('generatePrediction outputs full analysis with confidence and tactical brea
   assert.ok(result.confidenceScore >= 55, 'Confidence score should be valid');
   assert.ok(result.tacticalInsight.includes('Arsenal'), 'Tactical breakdown contains home team');
   assert.ok(result.keyFactors.length >= 3, 'Key analytical factors generated');
+  assert.equal(result.outcomeVerdict, 'WON (HOME WIN)');
+  assert.equal(result.outcomeTag, 'WON');
+});
+
+test('deriveOutcomeVerdict correctly identifies Won, Over, and Under outcomes with no description', () => {
+  assert.deepEqual(deriveOutcomeVerdict('Over 2.5 Goals', 'over_under'), { verdict: 'OVER 2.5', tag: 'OVER' });
+  assert.deepEqual(deriveOutcomeVerdict('Under 2.5 Goals', 'over_under'), { verdict: 'UNDER 2.5', tag: 'UNDER' });
+  assert.deepEqual(deriveOutcomeVerdict('Over 1.5 Goals', 'over_under'), { verdict: 'OVER 1.5', tag: 'OVER' });
+  assert.deepEqual(deriveOutcomeVerdict('Home Win (1)', '1x2'), { verdict: 'WON (HOME WIN)', tag: 'WON' });
+  assert.deepEqual(deriveOutcomeVerdict('Away Win (2)', '1x2'), { verdict: 'WON (AWAY WIN)', tag: 'WON' });
+  assert.deepEqual(deriveOutcomeVerdict('Draw (X)', '1x2'), { verdict: 'DRAW (X)', tag: 'WIN' });
+  assert.deepEqual(deriveOutcomeVerdict('Both Teams to Score (GG)', 'both_score'), { verdict: 'WON (BTTS: YES)', tag: 'WON' });
 });

@@ -8,6 +8,13 @@ import {
   registerUser,
 } from '../utils/authStorage.ts';
 import {
+  sendApprovalEmail,
+  sendRegistrationEmail,
+  getAllDispatchedEmails,
+  type EmailMessage,
+} from '../utils/emailService.ts';
+import { EmailModal } from './EmailModal.tsx';
+import {
   Lock,
   Unlock,
   ShieldCheck,
@@ -21,6 +28,8 @@ import {
   UserPlus,
   RefreshCw,
   AlertCircle,
+  Mail,
+  Send,
 } from 'lucide-react';
 
 interface AdminPortalProps {
@@ -38,14 +47,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [passcode, setPasscode] = useState('');
   const [passcodeError, setPasscodeError] = useState(false);
   const [users, setUsers] = useState<User[]>(getAllUsers());
-  const [statusFilter, setStatusFilter] = useState<'all' | UserStatus>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | UserStatus | 'emails'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [dispatchedEmails, setDispatchedEmails] = useState<EmailMessage[]>(getAllDispatchedEmails());
 
   const refreshList = () => {
     const fresh = getAllUsers();
     setUsers(fresh);
+    setDispatchedEmails(getAllDispatchedEmails());
     onUsersUpdated();
   };
 
@@ -61,8 +74,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   const handleApprove = (userId: string, email: string) => {
     updateUserApprovalStatus(userId, 'approved', currentUser?.email || 'admin@prosoccer.et');
+    const dispatched = sendApprovalEmail(email, currentUser?.email || 'admin@prosoccer.et');
+    setSelectedEmail(dispatched);
+    setShowEmailModal(true);
     refreshList();
-    showNotice(`Approved ${email}. User can now log in immediately.`);
+    showNotice(`Approved ${email} and dispatched official web-styled VIP activation email.`);
   };
 
   const handleReject = (userId: string, email: string) => {
@@ -84,9 +100,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     if (!newEmail || !newEmail.includes('@')) return;
     const res = registerUser(newEmail);
     if (res.success) {
+      const dispatched = sendRegistrationEmail(newEmail);
+      setSelectedEmail(dispatched);
+      setShowEmailModal(true);
       setNewEmail('');
       refreshList();
-      showNotice(`Created pending user ${newEmail}. Needs approval.`);
+      showNotice(`Created user ${newEmail} and dispatched web-styled registration email.`);
     } else {
       alert(res.error || 'Failed to add user');
     }
@@ -293,6 +312,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           >
             Rejected ({rejectedCount})
           </button>
+          <button
+            onClick={() => setStatusFilter('emails')}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+              statusFilter === 'emails'
+                ? 'bg-amber-400 text-black shadow-sm font-bold'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Mail className="w-3.5 h-3.5" />
+            <span>Sent Emails ({dispatchedEmails.length})</span>
+          </button>
         </div>
 
         {/* Search */}
@@ -300,7 +330,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search email..."
+            placeholder={statusFilter === 'emails' ? "Search sent emails..." : "Search user email..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
@@ -308,106 +338,206 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
       </div>
 
-      {/* Users Table / List */}
-      <div className="bg-[#0c101a] border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#121622] text-slate-400 uppercase tracking-wider border-b border-slate-800 font-semibold">
-              <tr>
-                <th className="py-3.5 px-4 sm:px-6">User Email</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 hidden sm:table-cell">Registered</th>
-                <th className="py-3.5 px-4 text-right">Approval Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {filteredUsers.length === 0 ? (
+      {statusFilter === 'emails' ? (
+        /* Sent Emails Outbox Styled View */
+        <div className="bg-[#0c101a] border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+          <div className="px-6 py-4 bg-[#121622] border-b border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Mail className="w-4 h-4 text-amber-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-white">
+                Dispatched Web-Styled Emails Log
+              </span>
+            </div>
+            <span className="text-xs text-slate-400">
+              Total Dispatched: <strong className="text-amber-400 font-mono">{dispatchedEmails.length}</strong>
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[#0e121d] text-slate-400 uppercase tracking-wider border-b border-slate-800 font-semibold">
                 <tr>
-                  <td colSpan={4} className="py-12 text-center text-slate-500">
-                    No users matching selected filter.
-                  </td>
+                  <th className="py-3 px-4 sm:px-6">Recipient</th>
+                  <th className="py-3 px-4">Subject</th>
+                  <th className="py-3 px-4">Type</th>
+                  <th className="py-3 px-4 hidden sm:table-cell">Dispatched Time</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
-              ) : (
-                filteredUsers.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-900/40 transition-colors">
-                    <td className="py-4 px-4 sm:px-6 font-medium text-white">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate max-w-[200px] sm:max-w-none">{u.email}</span>
-                        {u.role === 'admin' && (
-                          <span className="px-1.5 py-0.2 bg-yellow-500/20 text-yellow-300 border border-yellow-400/40 rounded text-[9px] uppercase font-bold">
-                            Admin
-                          </span>
-                        )}
-                      </div>
-                    </td>
-
-                    <td className="py-4 px-4 whitespace-nowrap">
-                      {u.status === 'pending' && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 text-[11px] font-semibold">
-                          <Clock className="w-3 h-3 text-amber-400 animate-pulse" />
-                          <span>Pending Approval</span>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {dispatchedEmails
+                  .filter((e) =>
+                    e.toEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    e.subject.toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                  .map((emailItem) => (
+                    <tr key={emailItem.id} className="hover:bg-slate-900/40 transition-colors">
+                      <td className="py-3.5 px-4 sm:px-6 font-mono font-medium text-white">
+                        {emailItem.toEmail}
+                      </td>
+                      <td className="py-3.5 px-4 text-slate-200">
+                        {emailItem.subject}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                          emailItem.badgeColor === 'emerald'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        }`}>
+                          {emailItem.type === 'approval_confirmed' ? 'VIP Approved' : 'Registration'}
                         </span>
-                      )}
-                      {u.status === 'approved' && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 text-[11px] font-semibold">
-                          <CheckCircle className="w-3 h-3 text-emerald-400" />
-                          <span>Approved VIP</span>
-                        </span>
-                      )}
-                      {u.status === 'rejected' && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/15 text-rose-300 border border-rose-400/30 text-[11px] font-semibold">
-                          <XCircle className="w-3 h-3 text-rose-400" />
-                          <span>Declined</span>
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="py-4 px-4 text-slate-400 hidden sm:table-cell tabular-nums">
-                      {new Date(u.createdAt).toLocaleDateString()}
-                    </td>
-
-                    <td className="py-4 px-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5">
-                        {u.status !== 'approved' && (
-                          <button
-                            onClick={() => handleApprove(u.id, u.email)}
-                            className="px-2.5 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
-                            title="Approve User Registration"
-                          >
-                            <CheckCircle className="w-3.5 h-3.5" />
-                            <span>Approve</span>
-                          </button>
-                        )}
-
-                        {u.status !== 'rejected' && u.role !== 'admin' && (
-                          <button
-                            onClick={() => handleReject(u.id, u.email)}
-                            className="px-2.5 py-1.5 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
-                            title="Reject User Registration"
-                          >
-                            <XCircle className="w-3.5 h-3.5" />
-                            <span>Reject</span>
-                          </button>
-                        )}
-
-                        {u.role !== 'admin' && (
-                          <button
-                            onClick={() => handleDelete(u.id, u.email)}
-                            className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-950/30 rounded-lg transition-colors"
-                            title="Delete User"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
+                      </td>
+                      <td className="py-3.5 px-4 text-slate-400 hidden sm:table-cell tabular-nums">
+                        {new Date(emailItem.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(emailItem.timestamp).toLocaleDateString()}
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <button
+                          onClick={() => {
+                            setSelectedEmail(emailItem);
+                            setShowEmailModal(true);
+                          }}
+                          className="px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-black font-bold rounded-lg text-xs transition-colors cursor-pointer"
+                        >
+                          View Email
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        /* Users Table / List */
+        <div className="bg-[#0c101a] border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[#121622] text-slate-400 uppercase tracking-wider border-b border-slate-800 font-semibold">
+                <tr>
+                  <th className="py-3.5 px-4 sm:px-6">User Email</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4 hidden sm:table-cell">Registered</th>
+                  <th className="py-3.5 px-4 text-right">Approval & Email Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-12 text-center text-slate-500">
+                      No users matching selected filter.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredUsers.map((u) => (
+                    <tr key={u.id} className="hover:bg-slate-900/40 transition-colors">
+                      <td className="py-4 px-4 sm:px-6 font-medium text-white">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate max-w-[200px] sm:max-w-none">{u.email}</span>
+                          {u.role === 'admin' && (
+                            <span className="px-1.5 py-0.2 bg-yellow-500/20 text-yellow-300 border border-yellow-400/40 rounded text-[9px] uppercase font-bold">
+                              Admin
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="py-4 px-4 whitespace-nowrap">
+                        {u.status === 'pending' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 text-[11px] font-semibold">
+                            <Clock className="w-3 h-3 text-amber-400 animate-pulse" />
+                            <span>Pending Approval</span>
+                          </span>
+                        )}
+                        {u.status === 'approved' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 text-[11px] font-semibold">
+                            <CheckCircle className="w-3 h-3 text-emerald-400" />
+                            <span>Approved VIP</span>
+                          </span>
+                        )}
+                        {u.status === 'rejected' && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/15 text-rose-300 border border-rose-400/30 text-[11px] font-semibold">
+                            <XCircle className="w-3 h-3 text-rose-400" />
+                            <span>Declined</span>
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="py-4 px-4 text-slate-400 hidden sm:table-cell tabular-nums">
+                        {new Date(u.createdAt).toLocaleDateString()}
+                      </td>
+
+                      <td className="py-4 px-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* View Web-Styled Email Button */}
+                          <button
+                            onClick={() => {
+                              const allEmails = getAllDispatchedEmails();
+                              const existing = allEmails.find((e) => e.toEmail === u.email);
+                              if (existing) {
+                                setSelectedEmail(existing);
+                              } else {
+                                const fresh = u.status === 'approved'
+                                  ? sendApprovalEmail(u.email, currentUser?.email || 'admin@prosoccer.et')
+                                  : sendRegistrationEmail(u.email);
+                                setSelectedEmail(fresh);
+                              }
+                              setShowEmailModal(true);
+                            }}
+                            className="px-2.5 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-300 font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                            title="Preview Web-Styled Email"
+                          >
+                            <Mail className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Email</span>
+                          </button>
+
+                          {u.status !== 'approved' && (
+                            <button
+                              onClick={() => handleApprove(u.id, u.email)}
+                              className="px-2.5 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                              title="Approve User & Send VIP Email"
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" />
+                              <span>Approve</span>
+                            </button>
+                          )}
+
+                          {u.status !== 'rejected' && u.role !== 'admin' && (
+                            <button
+                              onClick={() => handleReject(u.id, u.email)}
+                              className="px-2.5 py-1.5 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                              title="Reject User Registration"
+                            >
+                              <XCircle className="w-3.5 h-3.5" />
+                              <span>Reject</span>
+                            </button>
+                          )}
+
+                          {u.role !== 'admin' && (
+                            <button
+                              onClick={() => handleDelete(u.id, u.email)}
+                              className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-950/30 rounded-lg transition-colors"
+                              title="Delete User"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Web Interface Styled Email Modal */}
+      <EmailModal
+        email={selectedEmail}
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+      />
     </div>
   );
 };

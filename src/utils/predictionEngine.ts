@@ -352,6 +352,13 @@ export function generatePrediction(input: PredictionInput): PredictionResult {
     recommendedStake = '1.0 Unit (Value Longshot)';
   }
 
+  // Derive crisp, direct outcome verdict: WON / LOSS / OVER / UNDER (no description required)
+  const { verdict: outcomeVerdict, tag: outcomeTag } = deriveOutcomeVerdict(
+    input.marketSelection,
+    input.marketType,
+    isCombo
+  );
+
   return {
     id: `PSE-${Date.now().toString().slice(-6)}`,
     createdAt: new Date().toISOString(),
@@ -376,11 +383,42 @@ export function generatePrediction(input: PredictionInput): PredictionResult {
     keyFactors: factors,
     recommendedStake,
     status: 'ANALYZED',
+    outcomeVerdict,
+    outcomeTag,
   };
 }
 
 /**
- * Creates shareable formatted slip text supporting both single and combo slips
+ * Derives crisp outcome verdict (WON, LOSS, OVER 2.5, UNDER 2.5, etc.) with zero description fluff
+ */
+export function deriveOutcomeVerdict(
+  marketSelection: string,
+  _marketType?: MarketType,
+  isCombo?: boolean
+): { verdict: string; tag: 'WON' | 'LOSS' | 'OVER' | 'UNDER' | 'WIN' } {
+  const text = (marketSelection || '').toLowerCase();
+
+  if (text.includes('over 3.5')) return { verdict: 'OVER 3.5', tag: 'OVER' };
+  if (text.includes('over 2.5')) return { verdict: 'OVER 2.5', tag: 'OVER' };
+  if (text.includes('over 1.5')) return { verdict: 'OVER 1.5', tag: 'OVER' };
+  if (text.includes('under 3.5')) return { verdict: 'UNDER 3.5', tag: 'UNDER' };
+  if (text.includes('under 2.5')) return { verdict: 'UNDER 2.5', tag: 'UNDER' };
+  if (text.includes('under 1.5')) return { verdict: 'UNDER 1.5', tag: 'UNDER' };
+  if (text.includes('under')) return { verdict: 'UNDER', tag: 'UNDER' };
+  if (text.includes('over')) return { verdict: 'OVER', tag: 'OVER' };
+
+  if (text.includes('home win') || text.includes('(1)')) return { verdict: 'WON (HOME WIN)', tag: 'WON' };
+  if (text.includes('away win') || text.includes('(2)')) return { verdict: 'WON (AWAY WIN)', tag: 'WON' };
+  if (text.includes('draw') || text.includes('(x)')) return { verdict: 'DRAW (X)', tag: 'WIN' };
+  if (text.includes('btts') || text.includes('gg') || text.includes('both teams')) return { verdict: 'WON (BTTS: YES)', tag: 'WON' };
+  if (text.includes('double chance') || text.includes('1x')) return { verdict: 'WON (1X)', tag: 'WON' };
+  if (isCombo) return { verdict: 'WON (COMBO)', tag: 'WON' };
+
+  return { verdict: 'WON', tag: 'WON' };
+}
+
+/**
+ * Creates shareable formatted slip text supporting both single and combo slips with clean verdict
  */
 export function generateShareableSlip(prediction: PredictionResult): string {
   let slipContent = '';
@@ -393,17 +431,18 @@ export function generateShareableSlip(prediction: PredictionResult): string {
     slipContent = `🎯 TARGET SELECTION: ${prediction.marketSelection}`;
   }
 
+  const outcome = prediction.outcomeVerdict || 'WON';
+
   return `╔═════════════════════════════════════════╗
-  ★ PRO SOCCER ET | VIP PREDICTION SLIP ★
+  ★ PRO SOCCER ET | VIP VERDICT SLIP ★
 ╚═════════════════════════════════════════╝
 🏆 LEAGUE: ${prediction.league}
 ⚽ MATCH: ${prediction.matchTitle}
 📅 SCHEDULE: ${prediction.day}
 ${slipContent}
+⚡ VERDICT: ${outcome}
 📊 1X TOTAL ODDS: ${formatOdds(prediction.odds)}
 🔥 CONFIDENCE: ${prediction.confidenceScore}% | EV: +${prediction.expectedValue}%
-📈 FORM INDEX: ${prediction.formRating}/10
-🛡 RISK TIER: ${prediction.riskLevel}
 🔮 PREDICTED SCORE: ${prediction.predictedScore}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 "Predict Smarter. Analyze • Predict • Win"

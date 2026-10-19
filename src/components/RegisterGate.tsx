@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Clock, ShieldCheck, AlertCircle } from 'lucide-react';
 import { registerUser, loginUser } from '../utils/authStorage.ts';
+import { sendRegistrationEmail, type EmailMessage } from '../utils/emailService.ts';
+import { EmailModal } from './EmailModal.tsx';
 import type { User } from '../types.ts';
 import { SocialLinks } from './SocialLinks.tsx';
 
@@ -19,6 +21,8 @@ export const RegisterGate: React.FC<RegisterGateProps> = ({
   const [isPending, setIsPending] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [latestEmail, setLatestEmail] = useState<EmailMessage | null>(null);
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +40,10 @@ export const RegisterGate: React.FC<RegisterGateProps> = ({
         setErrorMessage(res.error || 'Failed to register.');
         return;
       }
-      // Registration successful! Switch to pending screen
+      // Registration successful! Dispatch official email styled like web interface
+      const dispatched = sendRegistrationEmail(clean);
+      setLatestEmail(dispatched);
+      setShowEmailModal(true);
       setPendingEmail(clean);
       setIsPending(true);
     } else {
@@ -78,6 +85,38 @@ export const RegisterGate: React.FC<RegisterGateProps> = ({
           <p className="mt-4 text-xs text-slate-400 leading-relaxed">
             Email <span className="font-semibold text-white">{pendingEmail}</span> has been submitted. The administrator will review and approve your account.
           </p>
+
+          {/* Web Interface Styled Email Notification Card */}
+          <div className="mt-5 p-4 rounded-2xl bg-[#121625] border border-amber-400/30 text-left">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-amber-400" />
+                <span className="text-xs font-black uppercase text-white">Official Email Sent</span>
+              </div>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-bold uppercase">
+                Web Styled
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              A registration confirmation email styled like PRO SOCCER ET has been dispatched to <strong className="text-white">{pendingEmail}</strong>.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                if (latestEmail) {
+                  setShowEmailModal(true);
+                } else {
+                  const emailMsg = sendRegistrationEmail(pendingEmail);
+                  setLatestEmail(emailMsg);
+                  setShowEmailModal(true);
+                }
+              }}
+              className="mt-3 w-full py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-black text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-[0_0_15px_rgba(255,215,0,0.3)]"
+            >
+              <Mail className="w-3.5 h-3.5 fill-black" />
+              <span>Preview Dispatched Email</span>
+            </button>
+          </div>
 
           <div className="mt-6 pt-5 border-t border-slate-800 flex flex-col items-center gap-3">
             <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold">
@@ -201,6 +240,13 @@ export const RegisterGate: React.FC<RegisterGateProps> = ({
           </div>
         </div>
       )}
+
+      {/* Web Interface Styled Email Modal */}
+      <EmailModal
+        email={latestEmail}
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+      />
     </div>
   );
 };

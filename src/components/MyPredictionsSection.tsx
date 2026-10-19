@@ -92,13 +92,15 @@ export const MyPredictionsSection: React.FC<MyPredictionsSectionProps> = ({
                   {p.matchTitle}
                 </h4>
 
-                {/* Selection & Odds */}
+                {/* Selection & Odds with Outcome Verdict Badge */}
                 <div className="my-3.5 p-3 rounded-xl bg-slate-900/90 border border-slate-800/80 flex items-center justify-between">
                   <div>
-                    <span className="text-[9px] uppercase font-bold text-slate-500 block">
-                      Pick
-                    </span>
-                    <span className="text-xs font-bold text-amber-300">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="px-2 py-0.5 rounded bg-amber-400 text-black text-[9px] font-black uppercase">
+                        {p.outcomeVerdict || 'WON'}
+                      </span>
+                    </div>
+                    <span className="text-xs font-bold text-slate-200">
                       {p.marketSelection}
                     </span>
                   </div>

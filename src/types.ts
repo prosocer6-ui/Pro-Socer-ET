@@ -64,6 +64,8 @@ export interface PredictionResult {
   keyFactors: MetricFactor[];
   recommendedStake: string; // e.g. '2.5 Units (Medium)'
   status?: 'WON' | 'PENDING' | 'ANALYZED';
+  outcomeVerdict?: string; // e.g. 'WON', 'LOSS', 'OVER 2.5', 'UNDER 2.5'
+  outcomeTag?: 'WON' | 'LOSS' | 'OVER' | 'UNDER' | 'WIN';
 }
 
 export interface BankerPick {

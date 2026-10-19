@@ -161,24 +161,52 @@ export const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
         </div>
       </div>
 
-      {/* Tactical Analysis & Factors */}
-      <div className="relative mt-6 p-4 rounded-xl bg-slate-900/40 border border-slate-800">
-        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>Tactical Analytical Summary</span>
+      {/* DIRECT OUTCOME VERDICT DISPLAY - NO DESCRIPTION REQUIRED */}
+      <div className="relative mt-6 p-6 rounded-2xl bg-[#090d18] border-2 border-amber-400/40 shadow-[0_0_30px_rgba(255,215,0,0.2)]">
+        <div className="flex items-center justify-between pb-3 border-b border-amber-500/20">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">
+              Direct Match Outcome • No Description
+            </span>
+          </div>
+          <span className="text-[10px] uppercase font-bold text-slate-400">
+            Instant 1X Result
+          </span>
         </div>
-        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-          {prediction.tacticalInsight}
-        </p>
 
-        {/* Factors Breakdown */}
-        <div className="mt-4 pt-3 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-          {prediction.keyFactors.map((factor, idx) => (
-            <div key={idx} className="flex items-center justify-between text-slate-400">
-              <span className="text-slate-400 font-medium">{factor.label}:</span>
-              <span className="font-semibold text-slate-200">{factor.value}</span>
+        {/* Primary Verdict Banner: WON / LOSS / OVER / UNDER */}
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-400/40">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              Market Outcome Verdict
+            </span>
+            <div className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight flex items-center gap-2 mt-1">
+              <span className="px-3.5 py-1 rounded-xl bg-amber-400 text-black font-black shadow-[0_0_15px_rgba(255,215,0,0.5)]">
+                {prediction.outcomeVerdict || 'WON'}
+              </span>
             </div>
-          ))}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="text-left sm:text-right">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Target Market
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-amber-300">
+                {prediction.marketSelection}
+              </span>
+            </div>
+            <div className="h-8 w-px bg-amber-500/30 hidden sm:block" />
+            <div className="text-left sm:text-right">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Score
+              </span>
+              <span className="text-lg font-mono font-black text-white">
+                {prediction.predictedScore}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
