@@ -12,6 +12,7 @@ import { PredictionResultCard } from './components/PredictionResultCard.tsx';
 import { AdminPortal } from './components/AdminPortal.tsx';
 import { RegisterGate } from './components/RegisterGate.tsx';
 import { Footer } from './components/Footer.tsx';
+import { StadiumBackground } from './components/StadiumBackground.tsx';
 import { AlertTriangle, RefreshCw, Sparkles } from 'lucide-react';
 
 // Production Error Boundary
@@ -100,21 +101,26 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-[#05070a] text-slate-100 flex flex-col font-sans selection:bg-amber-400 selection:text-black">
-        {/* Sleek Top Bar with ONLY Admin Portal Option (No logo, No dashboard, No VIP, No my predictions) */}
-        <Navbar
-          currentUser={currentUser}
-          pendingCount={pendingCount}
-          isAdminView={isAdminView}
-          onToggleAdminView={() => setIsAdminView(!isAdminView)}
-          onOpenAuth={() => {
-            // Already toggled via RegisterGate or logout
-          }}
-          onLogout={handleLogout}
-        />
+      <div className="relative min-h-screen bg-[#05070a] text-slate-100 flex flex-col font-sans selection:bg-amber-400 selection:text-black">
+        {/* Animated Stadium Atmosphere & 3D Pitch Background */}
+        <StadiumBackground />
 
-        {/* Main Content Area */}
-        <main className="flex-1 flex flex-col items-center justify-center">
+        {/* Content Layer (Keeps content crisp above animated background) */}
+        <div className="relative z-10 flex-1 flex flex-col">
+          {/* Sleek Top Bar with ONLY Admin Portal Option (No logo, No dashboard, No VIP, No my predictions) */}
+          <Navbar
+            currentUser={currentUser}
+            pendingCount={pendingCount}
+            isAdminView={isAdminView}
+            onToggleAdminView={() => setIsAdminView(!isAdminView)}
+            onOpenAuth={() => {
+              // Already toggled via RegisterGate or logout
+            }}
+            onLogout={handleLogout}
+          />
+
+          {/* Main Content Area */}
+          <main className="flex-1 flex flex-col items-center justify-center">
           {isAdminView ? (
             <AdminPortal
               currentUser={currentUser}
@@ -179,6 +185,7 @@ export default function App() {
 
         {/* Clean Footer with Admin Portal trigger */}
         <Footer onOpenAdmin={() => setIsAdminView(true)} />
+        </div>
       </div>
     </ErrorBoundary>
   );

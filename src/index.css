@@ -96,3 +96,194 @@
 .pitch-gradient {
   background: radial-gradient(ellipse at 50% 120%, rgba(16, 185, 129, 0.18) 0%, rgba(6, 78, 59, 0.08) 40%, transparent 80%);
 }
+
+/* Cinematic Stadium Motion Keyframes */
+@keyframes floodlightSwayLeft {
+  0% {
+    transform: rotate(18deg) scaleY(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: rotate(32deg) scaleY(1.08);
+    opacity: 0.65;
+  }
+  100% {
+    transform: rotate(18deg) scaleY(1);
+    opacity: 0.4;
+  }
+}
+
+@keyframes floodlightSwayRight {
+  0% {
+    transform: rotate(-18deg) scaleY(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: rotate(-32deg) scaleY(1.08);
+    opacity: 0.65;
+  }
+  100% {
+    transform: rotate(-18deg) scaleY(1);
+    opacity: 0.4;
+  }
+}
+
+@keyframes floodlightSwayCenterLeft {
+  0% {
+    transform: rotate(6deg) scale(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: rotate(20deg) scale(1.05);
+    opacity: 0.45;
+  }
+  100% {
+    transform: rotate(6deg) scale(1);
+    opacity: 0.25;
+  }
+}
+
+@keyframes floodlightSwayCenterRight {
+  0% {
+    transform: rotate(-6deg) scale(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: rotate(-20deg) scale(1.05);
+    opacity: 0.45;
+  }
+  100% {
+    transform: rotate(-6deg) scale(1);
+    opacity: 0.25;
+  }
+}
+
+@keyframes stadiumAtmosphereBreath {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes mistDriftA {
+  0% {
+    transform: translate3d(-10%, 0, 0);
+  }
+  50% {
+    transform: translate3d(10%, -8px, 0);
+  }
+  100% {
+    transform: translate3d(-10%, 0, 0);
+  }
+}
+
+@keyframes mistDriftB {
+  0% {
+    transform: translate3d(8%, 0, 0);
+  }
+  50% {
+    transform: translate3d(-8%, 10px, 0);
+  }
+  100% {
+    transform: translate3d(8%, 0, 0);
+  }
+}
+
+@keyframes pitchParallaxBreath {
+  0%, 100% {
+    transform: rotateX(58deg) translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: rotateX(56.5deg) translate3d(0, -18px, 0) scale(1.02);
+  }
+}
+
+@keyframes particleFloat {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.7;
+  }
+  80% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate3d(var(--tx, 15px), -240px, 0);
+    opacity: 0;
+  }
+}
+
+.anim-floodlight-left {
+  animation: floodlightSwayLeft 15s ease-in-out infinite;
+  transform-origin: top left;
+  will-change: transform, opacity;
+}
+
+.anim-floodlight-right {
+  animation: floodlightSwayRight 17s ease-in-out infinite;
+  transform-origin: top right;
+  will-change: transform, opacity;
+}
+
+.anim-floodlight-center-left {
+  animation: floodlightSwayCenterLeft 19s ease-in-out infinite;
+  transform-origin: top center;
+  will-change: transform, opacity;
+}
+
+.anim-floodlight-center-right {
+  animation: floodlightSwayCenterRight 21s ease-in-out infinite;
+  transform-origin: top center;
+  will-change: transform, opacity;
+}
+
+.anim-stadium-breath {
+  animation: stadiumAtmosphereBreath 10s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.anim-mist-a {
+  animation: mistDriftA 26s ease-in-out infinite;
+  will-change: transform;
+}
+
+.anim-mist-b {
+  animation: mistDriftB 32s ease-in-out infinite;
+  will-change: transform;
+}
+
+.anim-pitch-3d {
+  transform-style: preserve-3d;
+  animation: pitchParallaxBreath 20s ease-in-out infinite;
+  will-change: transform;
+}
+
+.anim-particle {
+  animation: particleFloat var(--dur, 12s) ease-in-out infinite;
+  animation-delay: var(--del, 0s);
+  will-change: transform, opacity;
+}
+
+/* Accessibility: Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .anim-floodlight-left,
+  .anim-floodlight-right,
+  .anim-floodlight-center-left,
+  .anim-floodlight-center-right,
+  .anim-stadium-breath,
+  .anim-mist-a,
+  .anim-mist-b,
+  .anim-pitch-3d,
+  .anim-particle,
+  .glowing-predict-button {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+

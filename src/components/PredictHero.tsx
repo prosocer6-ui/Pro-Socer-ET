@@ -13,14 +13,14 @@ export const PredictHero: React.FC<PredictHeroProps> = ({ onOpenPredict }) => {
       <div className="absolute inset-0 stadium-lighting pointer-events-none" />
       <div className="absolute bottom-0 inset-x-0 h-44 pitch-gradient pointer-events-none" />
 
-      {/* Decorative Gold Light Flares */}
-      <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-amber-400/10 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute top-1/3 -left-32 w-[350px] h-[350px] bg-yellow-500/10 blur-[100px] rounded-full pointer-events-none" />
-      <div className="absolute top-1/3 -right-32 w-[350px] h-[350px] bg-amber-400/10 blur-[100px] rounded-full pointer-events-none" />
+      {/* Decorative Gold Light Flares with subtle breathing animation */}
+      <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-amber-400/10 blur-[120px] rounded-full pointer-events-none anim-stadium-breath" />
+      <div className="absolute top-1/3 -left-32 w-[350px] h-[350px] bg-yellow-500/10 blur-[100px] rounded-full pointer-events-none anim-stadium-breath" />
+      <div className="absolute top-1/3 -right-32 w-[350px] h-[350px] bg-amber-400/10 blur-[100px] rounded-full pointer-events-none anim-stadium-breath" />
 
-      {/* Subtle Stadium Floodlight Beams */}
-      <div className="absolute top-0 left-1/4 w-1 h-96 bg-gradient-to-b from-amber-300/20 via-transparent to-transparent rotate-[25deg] blur-sm pointer-events-none" />
-      <div className="absolute top-0 right-1/4 w-1 h-96 bg-gradient-to-b from-amber-300/20 via-transparent to-transparent -rotate-[25deg] blur-sm pointer-events-none" />
+      {/* Subtle Stadium Floodlight Beams with gentle swaying movement */}
+      <div className="absolute top-0 left-1/4 w-1 h-96 bg-gradient-to-b from-amber-300/20 via-transparent to-transparent rotate-[25deg] blur-sm pointer-events-none anim-floodlight-center-left" />
+      <div className="absolute top-0 right-1/4 w-1 h-96 bg-gradient-to-b from-amber-300/20 via-transparent to-transparent -rotate-[25deg] blur-sm pointer-events-none anim-floodlight-center-right" />
 
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
         {/* Marquee Headline */}
