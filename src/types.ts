@@ -78,6 +78,7 @@ export interface BankerPick {
   odds: number;
   confidence: number;
   badge: string;
-  description: string;
+  verdict?: string;
+  description?: string;
   verifiedRecord: string;
 }

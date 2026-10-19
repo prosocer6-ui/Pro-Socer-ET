@@ -8,7 +8,8 @@ import {
 import { Navbar } from './components/Navbar.tsx';
 import { PredictHero } from './components/PredictHero.tsx';
 import { PredictModal } from './components/PredictModal.tsx';
-import { PredictionResultCard } from './components/PredictionResultCard.tsx';
+import { PredictionsListView } from './components/PredictionsListView.tsx';
+import { generatePredictionsList } from './utils/predictionEngine.ts';
 import { AdminPortal } from './components/AdminPortal.tsx';
 import { RegisterGate } from './components/RegisterGate.tsx';
 import { Footer } from './components/Footer.tsx';
@@ -69,7 +70,18 @@ export default function App() {
   const [isAdminView, setIsAdminView] = useState(false);
   const [isPredictModalOpen, setIsPredictModalOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState<number>(0);
-  const [latestPrediction, setLatestPrediction] = useState<PredictionResult | null>(null);
+  const [latestPredictions, setLatestPredictions] = useState<PredictionResult[]>(() => {
+    return generatePredictionsList(
+      {
+        league: 'English Premier League',
+        day: 'Today',
+        marketType: '1x2',
+        marketSelection: 'Home Win (1)',
+        odds: 1.85,
+      },
+      4
+    );
+  });
 
   // Calculate pending users count
   const refreshPendingUsers = () => {
@@ -92,8 +104,8 @@ export default function App() {
     setCurrentUserState(null);
   };
 
-  const handlePredictionGenerated = (newResult: PredictionResult) => {
-    setLatestPrediction(newResult);
+  const handlePredictionsGenerated = (newResults: PredictionResult[]) => {
+    setLatestPredictions(newResults);
     setIsAdminView(false);
   };
 
@@ -149,26 +161,13 @@ export default function App() {
                 onOpenPredict={() => setIsPredictModalOpen(true)}
               />
 
-              {/* Latest Generated Prediction Slip (appears when generated) */}
-              {latestPrediction && (
+              {/* Multi-Match Predictions List (Strictly Unique Matches, Direct Predictions, No Descriptions) */}
+              {latestPredictions.length > 0 && (
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 mb-16 animate-in fade-in">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-amber-400" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
-                        Generated Prediction Slip
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setLatestPrediction(null)}
-                      className="text-xs text-slate-400 hover:text-white"
-                    >
-                      Clear Slip
-                    </button>
-                  </div>
-                  <PredictionResultCard
-                    prediction={latestPrediction}
-                    onClose={() => setLatestPrediction(null)}
+                  <PredictionsListView
+                    predictions={latestPredictions}
+                    onClose={() => setLatestPredictions([])}
+                    onRefresh={() => setIsPredictModalOpen(true)}
                   />
                 </div>
               )}
@@ -180,7 +179,8 @@ export default function App() {
         <PredictModal
           isOpen={isPredictModalOpen}
           onClose={() => setIsPredictModalOpen(false)}
-          onPredictionGenerated={handlePredictionGenerated}
+          onPredictionsGenerated={handlePredictionsGenerated}
+          onPredictionGenerated={(res) => handlePredictionsGenerated([res])}
         />
 
         {/* Clean Footer with Admin Portal trigger */}

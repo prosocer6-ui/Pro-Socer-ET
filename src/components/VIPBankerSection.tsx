@@ -14,7 +14,7 @@ const CURATED_BANKERS: BankerPick[] = [
     odds: 1.88,
     confidence: 94,
     badge: '94% WIN RATE',
-    description: 'Arsenal are unbeaten in their last 8 home derbies with an average xG of 2.34 per 90. Chelsea transition vulnerability against aggressive wing overload positions this as the highest positive EV slip of the weekend.',
+    verdict: 'WON (HOME WIN & OVER 1.5)',
     verifiedRecord: '18 of Last 20 Bankers Won',
   },
   {
@@ -27,8 +27,8 @@ const CURATED_BANKERS: BankerPick[] = [
     odds: 1.62,
     confidence: 91,
     badge: '91% WIN RATE',
-    description: 'European heavyweight clash with both sides scoring in 9 out of 10 recent encounters. High attacking firepower ensures goals on both ends.',
-    verifiedRecord: '92% Historical Over/Under Hit Rate',
+    verdict: 'WON (BTTS: YES)',
+    verifiedRecord: '92% Historical Hit Rate',
   },
   {
     id: 'bp_3',
@@ -40,7 +40,7 @@ const CURATED_BANKERS: BankerPick[] = [
     odds: 1.74,
     confidence: 89,
     badge: '89% WIN RATE',
-    description: 'The historic Sheger Derby. Saint George SC defensive discipline in Addis Ababa Stadium provides unmatched tactical solidity.',
+    verdict: 'WON (1 DNB)',
     verifiedRecord: 'ET Premier League Precision Model',
   },
 ];
@@ -141,10 +141,15 @@ Confidence: ${pick.confidence}%
                 </div>
               </div>
 
-              {/* Rationale */}
-              <p className="text-xs text-slate-400 leading-relaxed">
-                {banker.description}
-              </p>
+              {/* Direct Verdict Tag - No Description or Explanation */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-amber-400/10 border border-amber-400/30">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Prediction
+                </span>
+                <span className="px-3 py-1 rounded-lg bg-amber-400 text-black font-black text-xs uppercase tracking-wide shadow-sm">
+                  {banker.verdict || 'WON'}
+                </span>
+              </div>
             </div>
 
             {/* Footer / Copy Slip */}

@@ -153,49 +153,65 @@ export const LEAGUE_MATCHUPS: Record<string, { home: string; away: string }[]> =
     { home: 'Manchester City', away: 'Liverpool' },
     { home: 'Tottenham Hotspur', away: 'Aston Villa' },
     { home: 'Newcastle United', away: 'Brighton' },
+    { home: 'Manchester United', away: 'Everton' },
+    { home: 'West Ham United', away: 'Wolverhampton' },
   ],
   'UEFA Champions League': [
     { home: 'Real Madrid', away: 'Bayern Munich' },
     { home: 'Manchester City', away: 'Paris Saint-Germain' },
     { home: 'Inter Milan', away: 'Barcelona' },
     { home: 'Arsenal', away: 'Borussia Dortmund' },
+    { home: 'Atletico Madrid', away: 'Juventus' },
+    { home: 'Bayer Leverkusen', away: 'AC Milan' },
   ],
   'Spanish La Liga': [
     { home: 'Real Madrid', away: 'Barcelona' },
     { home: 'Atletico Madrid', away: 'Athletic Bilbao' },
     { home: 'Real Sociedad', away: 'Villarreal' },
     { home: 'Real Betis', away: 'Sevilla' },
+    { home: 'Girona', away: 'Valencia' },
+    { home: 'Celta Vigo', away: 'Osasuna' },
   ],
   'Italian Serie A': [
     { home: 'Inter Milan', away: 'Juventus' },
     { home: 'AC Milan', away: 'Napoli' },
     { home: 'AS Roma', away: 'Lazio' },
     { home: 'Atalanta', away: 'Fiorentina' },
+    { home: 'Bologna', away: 'Torino' },
   ],
   'German Bundesliga': [
     { home: 'Bayern Munich', away: 'Borussia Dortmund' },
     { home: 'Bayer Leverkusen', away: 'RB Leipzig' },
     { home: 'Eintracht Frankfurt', away: 'Stuttgart' },
+    { home: 'Borussia Monchengladbach', away: 'Wolfsburg' },
+    { home: 'Freiburg', away: 'Mainz 05' },
   ],
   'Ethiopian Premier League (ET)': [
     { home: 'Saint George SC', away: 'Ethiopian Coffee SC' },
     { home: 'Fasil Kenema', away: 'Bahir Dar Kenema' },
     { home: 'Sidama Coffee', away: 'Hawassa Kenema' },
     { home: 'Mekelle 70 Enderta', away: 'Dire Dawa City' },
+    { home: 'Adama City', away: 'Hadiya Hossana' },
+    { home: 'Wolkite City', away: 'Arba Minch City' },
   ],
   'CAF Champions League': [
     { home: 'Al Ahly', away: 'Mamelodi Sundowns' },
     { home: 'Esperance Tunis', away: 'Wydad Casablanca' },
     { home: 'TP Mazembe', away: 'Simba SC' },
+    { home: 'Raja Casablanca', away: 'Young Africans' },
+    { home: 'ASEC Mimosas', away: 'Petro de Luanda' },
   ],
   'Saudi Pro League': [
     { home: 'Al-Hilal', away: 'Al-Nassr' },
     { home: 'Al-Ittihad', away: 'Al-Ahli' },
+    { home: 'Al-Shabab', away: 'Al-Ettifaq' },
+    { home: 'Al-Taawoun', away: 'Al-Fateh' },
   ],
   'French Ligue 1': [
     { home: 'Paris Saint-Germain', away: 'Marseille' },
     { home: 'Monaco', away: 'Lyon' },
     { home: 'Lille', away: 'Lens' },
+    { home: 'Rennes', away: 'Nice' },
   ],
 };
 
@@ -446,5 +462,188 @@ ${slipContent}
 🔮 PREDICTED SCORE: ${prediction.predictedScore}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 "Predict Smarter. Analyze • Predict • Win"
+Verified by PRO SOCCER ET 1X Matrix`;
+}
+
+/**
+ * Generates a clean list of multiple predictions (not just one match).
+ * Strictly guarantees NO duplicate matches and NO duplicated teams,
+ * listing them with their direct predictions (won/loss/over/under/etc.),
+ * with NO descriptions or explanations.
+ */
+export function generatePredictionsList(
+  input: PredictionInput,
+  count: number = 4
+): PredictionResult[] {
+  const leaguePairs = LEAGUE_MATCHUPS[input.league] || LEAGUE_MATCHUPS['English Premier League'] || [
+    { home: 'Arsenal', away: 'Chelsea' },
+    { home: 'Manchester City', away: 'Liverpool' },
+    { home: 'Tottenham Hotspur', away: 'Aston Villa' },
+    { home: 'Newcastle United', away: 'Brighton' },
+  ];
+
+  const results: PredictionResult[] = [];
+  const usedMatchKeys = new Set<string>();
+  const usedTeams = new Set<string>();
+
+  // Helper to mark a match and its teams as used
+  const registerMatch = (h: string, a: string) => {
+    const k1 = `${h.trim().toLowerCase()}_vs_${a.trim().toLowerCase()}`;
+    const k2 = `${a.trim().toLowerCase()}_vs_${h.trim().toLowerCase()}`;
+    usedMatchKeys.add(k1);
+    usedMatchKeys.add(k2);
+    usedTeams.add(h.trim().toLowerCase());
+    usedTeams.add(a.trim().toLowerCase());
+  };
+
+  const isDuplicate = (h: string, a: string) => {
+    const k1 = `${h.trim().toLowerCase()}_vs_${a.trim().toLowerCase()}`;
+    const k2 = `${a.trim().toLowerCase()}_vs_${h.trim().toLowerCase()}`;
+    return (
+      usedMatchKeys.has(k1) ||
+      usedMatchKeys.has(k2) ||
+      usedTeams.has(h.trim().toLowerCase()) ||
+      usedTeams.has(a.trim().toLowerCase())
+    );
+  };
+
+  // Helper to get varied market option for match at index
+  const getMarketOption = (index: number) => {
+    if (input.selectedMarkets && input.selectedMarkets.length > 0) {
+      return input.selectedMarkets[index % input.selectedMarkets.length];
+    }
+    if (input.marketType === 'over_under') {
+      const options = [
+        { label: 'Over 2.5 Goals', odds: 1.95, category: 'over_under' },
+        { label: 'Under 2.5 Goals', odds: 1.88, category: 'over_under' },
+        { label: 'Over 1.5 Goals', odds: 1.32, category: 'over_under' },
+        { label: 'Over 3.5 Goals', odds: 2.70, category: 'over_under' },
+      ];
+      return options[index % options.length];
+    }
+    if (input.marketType === '1x2') {
+      const options = [
+        { label: 'Home Win (1)', odds: 1.85, category: '1x2' },
+        { label: 'Away Win (2)', odds: 2.90, category: '1x2' },
+        { label: 'Draw (X)', odds: 3.30, category: '1x2' },
+        { label: 'Home Win (1)', odds: 1.75, category: '1x2' },
+      ];
+      return options[index % options.length];
+    }
+    if (input.marketType === 'both_score') {
+      const options = [
+        { label: 'Both Teams to Score (GG / Yes)', odds: 1.78, category: 'both_score' },
+        { label: 'Both Teams to Score (NG / No)', odds: 2.05, category: 'both_score' },
+      ];
+      return options[index % options.length];
+    }
+    if (input.marketType === 'double_chance') {
+      const options = [
+        { label: 'Double Chance (1X: Home or Draw)', odds: 1.34, category: 'double_chance' },
+        { label: 'Double Chance (12: Any Team Win)', odds: 1.30, category: 'double_chance' },
+        { label: 'Double Chance (X2: Draw or Away)', odds: 1.62, category: 'double_chance' },
+      ];
+      return options[index % options.length];
+    }
+    // Default varied selection
+    const defaultVariations = [
+      { label: input.marketSelection || 'Home Win (1)', odds: input.odds || 1.85, category: '1x2' },
+      { label: 'Over 2.5 Goals', odds: 1.95, category: 'over_under' },
+      { label: 'Both Teams to Score (GG / Yes)', odds: 1.78, category: 'both_score' },
+      { label: 'Under 2.5 Goals', odds: 1.88, category: 'over_under' },
+      { label: 'Double Chance (1X: Home or Draw)', odds: 1.34, category: 'double_chance' },
+    ];
+    return defaultVariations[index % defaultVariations.length];
+  };
+
+  // 1. If custom match provided and valid, include it as first match
+  if (input.homeTeam?.trim() && input.awayTeam?.trim()) {
+    const h = input.homeTeam.trim();
+    const a = input.awayTeam.trim();
+    registerMatch(h, a);
+    results.push(
+      generatePrediction({
+        ...input,
+        homeTeam: h,
+        awayTeam: a,
+      })
+    );
+  }
+
+  // 2. Pull from primary league matchups without duplicating
+  for (const pair of leaguePairs) {
+    if (results.length >= count) break;
+    if (isDuplicate(pair.home, pair.away)) continue;
+
+    registerMatch(pair.home, pair.away);
+    const market = getMarketOption(results.length);
+    results.push(
+      generatePrediction({
+        ...input,
+        homeTeam: pair.home,
+        awayTeam: pair.away,
+        marketSelection: market.label,
+        marketType: (market.category as MarketType) || input.marketType,
+        odds: market.odds || input.odds,
+        isCombo: false,
+      })
+    );
+  }
+
+  // 3. Fallback to other premier leagues if needed to guarantee multi-match count without duplicate matches
+  if (results.length < count) {
+    const allLeagues = Object.entries(LEAGUE_MATCHUPS);
+    for (const [leagueName, pairs] of allLeagues) {
+      if (results.length >= count) break;
+      for (const pair of pairs) {
+        if (results.length >= count) break;
+        if (isDuplicate(pair.home, pair.away)) continue;
+
+        registerMatch(pair.home, pair.away);
+        const market = getMarketOption(results.length);
+        results.push(
+          generatePrediction({
+            ...input,
+            league: leagueName,
+            homeTeam: pair.home,
+            awayTeam: pair.away,
+            marketSelection: market.label,
+            marketType: (market.category as MarketType) || input.marketType,
+            odds: market.odds || input.odds,
+            isCombo: false,
+          })
+        );
+      }
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Creates formatted shareable slip for multiple matches with direct predictions and no descriptions
+ */
+export function generateMultiMatchShareSlip(predictions: PredictionResult[]): string {
+  if (!predictions || predictions.length === 0) return '';
+  const lines = predictions.map((p, i) => {
+    const verdict = p.outcomeVerdict || 'WON';
+    return `${i + 1}. ${p.matchTitle} (${p.league})
+   • Prediction: ${verdict}
+   • Strict 1X Odds: ${formatOdds(p.odds)}`;
+  });
+
+  const totalOdds = calculateComboOdds(
+    predictions.map((p, i) => ({ id: `m_${i}`, category: p.marketType, label: p.marketSelection, odds: p.odds }))
+  );
+
+  return `╔═════════════════════════════════════════╗
+  ★ PRO SOCCER ET | MATCH PREDICTIONS ★
+╚═════════════════════════════════════════╝
+Matches: ${predictions.length} | No Descriptions • Direct 1X Predictions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${lines.join('\n\n')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 Total Acca Odds: ${formatOdds(totalOdds)}
+📅 Schedule: ${predictions[0]?.day || 'Today'}
 Verified by PRO SOCCER ET 1X Matrix`;
 }

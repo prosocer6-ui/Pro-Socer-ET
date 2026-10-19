@@ -22,6 +22,7 @@ import {
   WORLD_LEAGUES,
   LEAGUE_MATCHUPS,
   generatePrediction,
+  generatePredictionsList,
   formatOdds,
   calculateImpliedProbability,
   calculateComboOdds,
@@ -30,7 +31,8 @@ import {
 interface PredictModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onPredictionGenerated: (result: PredictionResult) => void;
+  onPredictionGenerated?: (result: PredictionResult) => void;
+  onPredictionsGenerated?: (results: PredictionResult[]) => void;
 }
 
 type WizardStep = 1 | 2 | 3 | 4;
@@ -55,6 +57,7 @@ export const PredictModal: React.FC<PredictModalProps> = ({
   isOpen,
   onClose,
   onPredictionGenerated,
+  onPredictionsGenerated,
 }) => {
   // Wizard state: Step 1 (Odds) -> Step 2 (Date) -> Step 3 (League) -> Step 4 (Markets)
   const [currentStep, setCurrentStep] = useState<WizardStep>(1);
@@ -207,8 +210,14 @@ export const PredictModal: React.FC<PredictModalProps> = ({
 
     setTimeout(() => {
       try {
-        const result = generatePrediction(inputPayload);
-        onPredictionGenerated(result);
+        // Generate multi-match list without duplicates, direct predictions with no descriptions
+        const results = generatePredictionsList(inputPayload, 4);
+        if (onPredictionsGenerated) {
+          onPredictionsGenerated(results);
+        }
+        if (onPredictionGenerated && results.length > 0) {
+          onPredictionGenerated(results[0]);
+        }
         setIsGenerating(false);
         onClose();
         // Reset to Step 1 for next time

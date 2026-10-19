@@ -9,6 +9,8 @@ import {
   calculateComboOdds,
   WORLD_LEAGUES,
   deriveOutcomeVerdict,
+  generatePredictionsList,
+  generateMultiMatchShareSlip,
 } from './predictionEngine.ts';
 
 test('calculateComboOdds correctly multiplies decimal odds', () => {
@@ -90,4 +92,87 @@ test('deriveOutcomeVerdict correctly identifies Won, Over, and Under outcomes wi
   assert.deepEqual(deriveOutcomeVerdict('Away Win (2)', '1x2'), { verdict: 'WON (AWAY WIN)', tag: 'WON' });
   assert.deepEqual(deriveOutcomeVerdict('Draw (X)', '1x2'), { verdict: 'DRAW (X)', tag: 'WIN' });
   assert.deepEqual(deriveOutcomeVerdict('Both Teams to Score (GG)', 'both_score'), { verdict: 'WON (BTTS: YES)', tag: 'WON' });
+});
+
+test('generatePredictionsList generates multiple matches with zero duplicates and direct predictions', () => {
+  const matches = generatePredictionsList(
+    {
+      league: 'English Premier League',
+      day: 'Today',
+      marketType: '1x2',
+      marketSelection: 'Home Win (1)',
+      odds: 1.85,
+    },
+    4
+  );
+
+  // 1. "not just one match": must return multiple matches (4 matches)
+  assert.equal(matches.length, 4, 'Should generate 4 matches');
+
+  // 2. "dont dublicsate that match": strictly NO duplicate matches
+  const matchTitles = matches.map((m) => m.matchTitle.toLowerCase());
+  const uniqueTitles = new Set(matchTitles);
+  assert.equal(uniqueTitles.size, matches.length, 'Every match title must be unique with no duplicates');
+
+  // Strictly no team appears twice
+  const allTeams = matches.flatMap((m) => [m.homeTeam.toLowerCase(), m.awayTeam.toLowerCase()]);
+  const uniqueTeams = new Set(allTeams);
+  assert.equal(uniqueTeams.size, allTeams.length, 'No team should play twice in the prediction list');
+
+  // 3. "just list them with there pridcts no description or explanation"
+  for (const match of matches) {
+    assert.ok(match.outcomeVerdict, 'Must have a direct outcome verdict (won/loss/over/under/etc.)');
+    assert.ok(match.odds >= 1.05, 'Must have strict 1X decimal odds');
+    assert.ok(match.matchTitle.includes(' vs '), 'Must have match title');
+  }
+});
+
+test('generatePredictionsList handles custom teams as first match without duplicating other matches', () => {
+  const matches = generatePredictionsList(
+    {
+      league: 'English Premier League',
+      day: 'Today',
+      marketType: 'over_under',
+      marketSelection: 'Over 2.5 Goals',
+      odds: 1.95,
+      homeTeam: 'Arsenal',
+      awayTeam: 'Chelsea',
+    },
+    4
+  );
+
+  assert.equal(matches.length, 4);
+  assert.equal(matches[0].matchTitle, 'Arsenal vs Chelsea');
+  assert.equal(matches[0].outcomeVerdict, 'OVER 2.5');
+
+  // Verify none of the subsequent 3 matches duplicate Arsenal or Chelsea
+  for (let i = 1; i < matches.length; i++) {
+    assert.notEqual(matches[i].matchTitle.toLowerCase(), 'arsenal vs chelsea');
+    assert.notEqual(matches[i].homeTeam.toLowerCase(), 'arsenal');
+    assert.notEqual(matches[i].awayTeam.toLowerCase(), 'arsenal');
+    assert.notEqual(matches[i].homeTeam.toLowerCase(), 'chelsea');
+    assert.notEqual(matches[i].awayTeam.toLowerCase(), 'chelsea');
+  }
+});
+
+test('generateMultiMatchShareSlip formats multiple predictions cleanly with no descriptions', () => {
+  const matches = generatePredictionsList(
+    {
+      league: 'Spanish La Liga',
+      day: 'Today',
+      marketType: '1x2',
+      marketSelection: 'Home Win (1)',
+      odds: 1.85,
+    },
+    3
+  );
+
+  const slip = generateMultiMatchShareSlip(matches);
+  assert.ok(slip.includes('PRO SOCCER ET | MATCH PREDICTIONS'));
+  assert.ok(slip.includes('Matches: 3'));
+  assert.ok(slip.includes('Prediction:'));
+  assert.ok(slip.includes('1X Odds:'));
+  // Ensure no tactical long explanation paragraphs in the share slip
+  assert.ok(!slip.includes('possession metrics'));
+  assert.ok(!slip.includes('tactical breakdown'));
 });
