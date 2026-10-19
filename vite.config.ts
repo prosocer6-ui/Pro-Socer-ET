@@ -1,15 +1,30 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
+import { defineConfig } from 'vite';
+
+// Automatically detect base path for GitHub Pages or local environments
+const getBase = () => {
+  if (process.env.BASE_PATH) {
+    return process.env.BASE_PATH.endsWith('/') ? process.env.BASE_PATH : `${process.env.BASE_PATH}/`;
+  }
+  if (process.env.GITHUB_REPOSITORY) {
+    const repo = process.env.GITHUB_REPOSITORY.split('/')[1];
+    if (repo && repo.toLowerCase().endsWith('.github.io')) {
+      return '/';
+    }
+    return `/${repo}/`;
+  }
+  return './';
+};
 
 export default defineConfig(() => {
   return {
-    base: './',
+    base: getBase(),
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve('.'),
       },
     },
     server: {
@@ -21,3 +36,4 @@ export default defineConfig(() => {
     },
   };
 });
+
